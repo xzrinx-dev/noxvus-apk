@@ -12,6 +12,10 @@ class NoxTheme {
   static const muted = Color(0xFF3A3A3A);
   static const textColor = Color(0xFFD4D4D4);
   static const text2 = Color(0xFF888888);
+  static const white = Colors.white;
+
+  static const radius = 16.0;
+  static const radiusSm = 10.0;
 
   static BoxDecoration cardDecoration({double radius = NoxTheme.radius}) {
     return BoxDecoration(
@@ -20,7 +24,4 @@ class NoxTheme {
       border: Border.all(color: border, width: 1),
     );
   }
-
-  static const radius = 16.0;
-  static const radiusSm = 10.0;
 }

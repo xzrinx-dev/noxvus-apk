@@ -35,6 +35,7 @@ class NoxvusApp extends StatelessWidget {
           surface: Color(0xFF0A0A0A),
           primary: Colors.white,
         ),
+        fontFamily: 'sans-serif',
       ),
       home: initialName != null
           ? MainScreen(name: initialName!)
