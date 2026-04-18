@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id', null);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
   final prefs = await SharedPreferences.getInstance();
   final name = prefs.getString('nx_name');
-
   runApp(NoxvusApp(initialName: name));
 }
 
@@ -35,7 +35,6 @@ class NoxvusApp extends StatelessWidget {
           surface: Color(0xFF0A0A0A),
           primary: Colors.white,
         ),
-        fontFamily: 'sans-serif',
       ),
       home: initialName != null
           ? MainScreen(name: initialName!)
