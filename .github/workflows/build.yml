@@ -21,6 +21,16 @@ jobs:
           flutter-version: '3.29.0'
           channel: 'stable'
 
+      - name: Pre-download Gradle
+        run: |
+          mkdir -p ~/.gradle/wrapper/dists
+          wget -q --retry-connrefused --waitretry=5 --tries=5 \
+            https://github.com/gradle/gradle/releases/download/v8.9.0/gradle-8.9-bin.zip \
+            -O ~/.gradle/wrapper/dists/gradle-8.9-bin.zip || \
+          wget -q --retry-connrefused --waitretry=5 --tries=5 \
+            https://services.gradle.org/distributions/gradle-8.9-bin.zip \
+            -O ~/.gradle/wrapper/dists/gradle-8.9-bin.zip
+
       - name: Create project and copy files
         run: |
           flutter create --org com.xzrinx noxvus_build
@@ -39,8 +49,7 @@ jobs:
 
       - name: Fix Gradle and NDK
         run: |
-          # Pakai versi gradle yang udah ada di cache runner
-          sed -i "s|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-bin.zip|" noxvus_build/android/gradle/wrapper/gradle-wrapper.properties
+          sed -i "s|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.9-bin.zip|" noxvus_build/android/gradle/wrapper/gradle-wrapper.properties
           sed -i 's/id("org.jetbrains.kotlin.android") version "[^"]*"/id("org.jetbrains.kotlin.android") version "1.9.22"/' noxvus_build/android/settings.gradle.kts
           sed -i '/^android {/a\    ndkVersion = "27.0.12077973"' noxvus_build/android/app/build.gradle.kts
 
