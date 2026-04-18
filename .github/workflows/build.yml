@@ -27,17 +27,10 @@ jobs:
           cp -r lib/* noxvus_build/lib/
           cp pubspec.yaml noxvus_build/pubspec.yaml
 
-      - name: Fix Kotlin version
+      - name: Fix Kotlin version in build.gradle.kts
         run: |
-          cd noxvus_build/android
-          sed -i "s/ext.kotlin_version = .*/ext.kotlin_version = '1.9.22'/" build.gradle
-          cat build.gradle
-
-      - name: Fix Gradle wrapper
-        run: |
-          cd noxvus_build/android
-          sed -i "s|distributionUrl=.*|distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-bin.zip|" gradle/wrapper/gradle-wrapper.properties
-          cat gradle/wrapper/gradle-wrapper.properties
+          sed -i 's/id("org.jetbrains.kotlin.android") version "[^"]*"/id("org.jetbrains.kotlin.android") version "1.9.22"/' noxvus_build/android/settings.gradle.kts
+          sed -i "s|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.4-bin.zip|" noxvus_build/android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Install dependencies
         run: cd noxvus_build && flutter pub get
