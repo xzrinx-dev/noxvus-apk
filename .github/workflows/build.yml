@@ -18,7 +18,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
+          flutter-version: '3.29.0'
           channel: 'stable'
 
       - name: Create project and copy files
@@ -27,37 +27,17 @@ jobs:
           cp -r lib/* noxvus_build/lib/
           cp pubspec.yaml noxvus_build/pubspec.yaml
 
-      - name: Fix Kotlin and Gradle version
+      - name: Fix Kotlin version
         run: |
-          cat > noxvus_build/android/build.gradle << 'GRADLE'
-          buildscript {
-              ext.kotlin_version = '1.9.22'
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:8.1.0'
-                  classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-              }
-          }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          rootProject.buildDir = '../build'
-          subprojects {
-              project.buildDir = "${rootProject.buildDir}/${project.name}"
-          }
-          subprojects {
-              project.evaluationDependsOn(':app')
-          }
-          tasks.register("clean", Delete) {
-              delete rootProject.buildDir
-          }
-          GRADLE
+          cd noxvus_build/android
+          sed -i "s/ext.kotlin_version = .*/ext.kotlin_version = '1.9.22'/" build.gradle
+          cat build.gradle
+
+      - name: Fix Gradle wrapper
+        run: |
+          cd noxvus_build/android
+          sed -i "s|distributionUrl=.*|distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-bin.zip|" gradle/wrapper/gradle-wrapper.properties
+          cat gradle/wrapper/gradle-wrapper.properties
 
       - name: Install dependencies
         run: cd noxvus_build && flutter pub get
