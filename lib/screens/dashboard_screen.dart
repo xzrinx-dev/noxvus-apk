@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import '../theme.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -13,22 +12,22 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // Clock
   late Timer _clockTimer;
   String _time = '00:00:00';
   String _date = '';
   String _tz = '';
 
-  // Weather
   String _temp = '--';
   String _desc = 'Memuat...';
   String _city = '';
   IconData _weatherIcon = Icons.wb_sunny_rounded;
 
-  // Quote
   int _quoteIdx = 0;
   double _quoteOpacity = 1.0;
   late Timer _quoteTimer;
+
+  final _days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  final _months = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
   final List<Map<String, String>> _quotes = [
     {'text': 'Jangan hitung hari-harimu, buat hari-harimu terhitung.', 'author': 'Muhammad Ali'},
@@ -46,66 +45,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _startClock();
-    _startQuotes();
-    _loadWeatherSafe();
-  }
-
-  void _startClock() {
     _updateClock();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateClock());
-  }
-
-  void _updateClock() {
-    if (!mounted) return;
-    final now = DateTime.now();
-    setState(() {
-      _time = DateFormat('HH:mm:ss').format(now);
-      _date = DateFormat('EEEE, d MMMM yyyy', 'id').format(now).toUpperCase();
-      _tz = now.timeZoneName;
-    });
-  }
-
-  void _startQuotes() {
     _quoteIdx = DateTime.now().millisecond % _quotes.length;
     _quoteTimer = Timer.periodic(const Duration(seconds: 7), (_) async {
       if (!mounted) return;
       setState(() => _quoteOpacity = 0);
       await Future.delayed(const Duration(milliseconds: 400));
       if (!mounted) return;
-      setState(() {
-        _quoteIdx = (_quoteIdx + 1) % _quotes.length;
-        _quoteOpacity = 1;
-      });
+      setState(() { _quoteIdx = (_quoteIdx + 1) % _quotes.length; _quoteOpacity = 1; });
+    });
+    _loadWeather();
+  }
+
+  void _updateClock() {
+    if (!mounted) return;
+    final n = DateTime.now();
+    final h = n.hour.toString().padLeft(2,'0');
+    final m = n.minute.toString().padLeft(2,'0');
+    final s = n.second.toString().padLeft(2,'0');
+    setState(() {
+      _time = '$h:$m:$s';
+      _date = '${_days[n.weekday % 7]}, ${n.day} ${_months[n.month]} ${n.year}'.toUpperCase();
+      _tz = n.timeZoneName;
     });
   }
 
-  Future<void> _loadWeatherSafe() async {
+  Future<void> _loadWeather() async {
     try {
-      // Coba tanpa permission dulu pake IP-based location
-      final res = await http.get(Uri.parse('https://ipapi.co/json/')).timeout(const Duration(seconds: 5));
+      final r = await http.get(Uri.parse('https://ipapi.co/json/')).timeout(const Duration(seconds: 6));
       if (!mounted) return;
-      if (res.statusCode == 200) {
-        final g = json.decode(res.body);
-        final lat = g['latitude'];
-        final lon = g['longitude'];
-        final city = g['city'] ?? '';
-        final wRes = await http.get(Uri.parse(
-          'https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current_weather=true'
-        )).timeout(const Duration(seconds: 5));
-        if (!mounted) return;
-        if (wRes.statusCode == 200) {
-          final w = json.decode(wRes.body);
-          final cw = w['current_weather'];
-          final code = (cw['weathercode'] as num).toInt();
-          setState(() {
-            _temp = '${cw['temperature']}°C';
-            _desc = _wDesc(code);
-            _weatherIcon = _wIcon(code);
-            _city = city;
-          });
-        }
-      }
+      final g = json.decode(r.body);
+      final lat = g['latitude']; final lon = g['longitude'];
+      final city = g['city'] ?? '';
+      final wr = await http.get(Uri.parse(
+        'https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current_weather=true'
+      )).timeout(const Duration(seconds: 6));
+      if (!mounted) return;
+      final w = json.decode(wr.body)['current_weather'];
+      final code = (w['weathercode'] as num).toInt();
+      setState(() {
+        _temp = '${w['temperature']}°C';
+        _desc = _wDesc(code);
+        _weatherIcon = _wIcon(code);
+        _city = city;
+      });
     } catch (_) {
       if (mounted) setState(() => _desc = 'Gagal memuat');
     }
@@ -113,11 +97,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String _wDesc(int c) {
     if (c == 0) return 'Cerah';
-    if (c <= 2) return 'Cerah Berawan';
+    if (c <= 2) return 'Berawan';
     if (c == 3) return 'Mendung';
-    if (c == 45) return 'Berkabut';
     if (c <= 67) return 'Hujan';
-    if (c <= 77) return 'Salju';
     return 'Badai';
   }
 
@@ -139,13 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0A0A0A), Color(0xFF111111)],
-        ),
-      ),
+      color: NoxTheme.bg,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
         children: [
@@ -165,163 +141,116 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _heroCard() {
-    return Container(
-      height: 160,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(NoxTheme.radius),
-        border: Border.all(color: NoxTheme.border),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1C1C1C), Color(0xFF0A0A0A)],
+  Widget _heroCard() => Container(
+    height: 160,
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(NoxTheme.radius),
+      border: Border.all(color: NoxTheme.border),
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft, end: Alignment.bottomRight,
+        colors: [Color(0xFF1C1C1C), Color(0xFF0A0A0A)],
+      ),
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          decoration: BoxDecoration(
+            border: Border.all(color: NoxTheme.border2),
+            borderRadius: BorderRadius.circular(99),
+          ),
+          child: Text('NOXVUS · @XZRINX', style: TextStyle(
+            color: NoxTheme.accentDim, fontSize: 8, fontFamily: 'monospace', letterSpacing: 2,
+          )),
         ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-            decoration: BoxDecoration(
-              border: Border.all(color: NoxTheme.border2),
-              borderRadius: BorderRadius.circular(99),
-            ),
-            child: Text('NOXVUS · @XZRINX', style: TextStyle(
-              color: NoxTheme.accentDim, fontSize: 8,
-              fontFamily: 'monospace', letterSpacing: 2,
-            )),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'HEY, ${widget.name.toUpperCase()}',
-            style: const TextStyle(
-              color: Colors.white, fontSize: 24,
-              fontWeight: FontWeight.w800, letterSpacing: -0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        const SizedBox(height: 10),
+        Text('HEY, ${widget.name.toUpperCase()}', style: const TextStyle(
+          color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5,
+        )),
+      ],
+    ),
+  );
 
-  Widget _weatherCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: NoxTheme.card,
-        borderRadius: BorderRadius.circular(NoxTheme.radius),
-        border: Border.all(color: NoxTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('CUACA', style: TextStyle(
-            color: NoxTheme.text2, fontSize: 9,
-            letterSpacing: 2, fontFamily: 'monospace',
-          )),
-          const SizedBox(height: 12),
-          Icon(_weatherIcon, color: Colors.white, size: 26),
-          const SizedBox(height: 6),
-          Text(_temp, style: const TextStyle(
-            color: Colors.white, fontSize: 22,
-            fontWeight: FontWeight.w800, height: 1,
-          )),
-          const SizedBox(height: 2),
-          Text(_desc, style: TextStyle(
-            color: NoxTheme.text2, fontSize: 10, fontFamily: 'monospace',
-          )),
-          if (_city.isNotEmpty) Text(_city, style: TextStyle(
-            color: NoxTheme.muted, fontSize: 9, fontFamily: 'monospace',
-          )),
-        ],
-      ),
-    );
-  }
+  Widget _weatherCard() => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: NoxTheme.card,
+      borderRadius: BorderRadius.circular(NoxTheme.radius),
+      border: Border.all(color: NoxTheme.border),
+    ),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('CUACA', style: TextStyle(color: NoxTheme.text2, fontSize: 9, letterSpacing: 2, fontFamily: 'monospace')),
+      const SizedBox(height: 12),
+      Icon(_weatherIcon, color: Colors.white, size: 26),
+      const SizedBox(height: 6),
+      Text(_temp, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, height: 1)),
+      const SizedBox(height: 2),
+      Text(_desc, style: TextStyle(color: NoxTheme.text2, fontSize: 10, fontFamily: 'monospace')),
+      if (_city.isNotEmpty) Text(_city, style: TextStyle(color: NoxTheme.muted, fontSize: 9, fontFamily: 'monospace')),
+    ]),
+  );
 
-  Widget _musicCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: NoxTheme.card,
-        borderRadius: BorderRadius.circular(NoxTheme.radius),
-        border: Border.all(color: NoxTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('MUSIK', style: TextStyle(
-            color: NoxTheme.text2, fontSize: 9,
-            letterSpacing: 2, fontFamily: 'monospace',
-          )),
-          const SizedBox(height: 12),
-          Text('Berdansalah', style: const TextStyle(
-            color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700,
-          ), overflow: TextOverflow.ellipsis),
-          Text('Hindia', style: TextStyle(
-            color: NoxTheme.text2, fontSize: 10, fontFamily: 'monospace',
-          )),
-          const SizedBox(height: 12),
-          Row(children: [
-            _mBtn(Icons.skip_previous_rounded),
-            const SizedBox(width: 8),
-            Container(
-              width: 34, height: 34,
-              decoration: const BoxDecoration(
-                color: Colors.white, shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.play_arrow_rounded, color: Colors.black, size: 20),
-            ),
-            const SizedBox(width: 8),
-            _mBtn(Icons.skip_next_rounded),
-          ]),
-        ],
-      ),
-    );
-  }
+  Widget _musicCard() => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: NoxTheme.card,
+      borderRadius: BorderRadius.circular(NoxTheme.radius),
+      border: Border.all(color: NoxTheme.border),
+    ),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('MUSIK', style: TextStyle(color: NoxTheme.text2, fontSize: 9, letterSpacing: 2, fontFamily: 'monospace')),
+      const SizedBox(height: 12),
+      Text('Berdansalah', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
+      Text('Hindia', style: TextStyle(color: NoxTheme.text2, fontSize: 10, fontFamily: 'monospace')),
+      const SizedBox(height: 12),
+      Row(children: [
+        _mBtn(Icons.skip_previous_rounded),
+        const SizedBox(width: 8),
+        Container(
+          width: 34, height: 34,
+          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          child: const Icon(Icons.play_arrow_rounded, color: Colors.black, size: 20),
+        ),
+        const SizedBox(width: 8),
+        _mBtn(Icons.skip_next_rounded),
+      ]),
+    ]),
+  );
 
   Widget _mBtn(IconData icon) => Container(
     width: 28, height: 28,
     decoration: BoxDecoration(
-      color: NoxTheme.bg3,
-      borderRadius: BorderRadius.circular(8),
+      color: NoxTheme.bg3, borderRadius: BorderRadius.circular(8),
       border: Border.all(color: NoxTheme.border),
     ),
     child: Icon(icon, color: NoxTheme.text2, size: 15),
   );
 
-  Widget _clockCard() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        color: NoxTheme.card,
-        borderRadius: BorderRadius.circular(NoxTheme.radius),
-        border: Border.all(color: NoxTheme.border),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.access_time_rounded, color: NoxTheme.accentDim, size: 20),
-          const SizedBox(width: 12),
-          Text(_time, style: const TextStyle(
-            color: Colors.white, fontSize: 28,
-            fontWeight: FontWeight.w800, letterSpacing: -1,
-            fontFamily: 'monospace',
-          )),
-          const Spacer(),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text(_date, style: TextStyle(
-              color: NoxTheme.text2, fontSize: 8, fontFamily: 'monospace',
-            )),
-            const SizedBox(height: 2),
-            Text(_tz, style: TextStyle(
-              color: NoxTheme.muted, fontSize: 8, fontFamily: 'monospace',
-            )),
-          ]),
-        ],
-      ),
-    );
-  }
+  Widget _clockCard() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+    decoration: BoxDecoration(
+      color: NoxTheme.card,
+      borderRadius: BorderRadius.circular(NoxTheme.radius),
+      border: Border.all(color: NoxTheme.border),
+    ),
+    child: Row(children: [
+      Icon(Icons.access_time_rounded, color: NoxTheme.accentDim, size: 20),
+      const SizedBox(width: 12),
+      Text(_time, style: const TextStyle(
+        color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800,
+        letterSpacing: -1, fontFamily: 'monospace',
+      )),
+      const Spacer(),
+      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        Text(_date, style: TextStyle(color: NoxTheme.text2, fontSize: 8, fontFamily: 'monospace')),
+        const SizedBox(height: 2),
+        Text(_tz, style: TextStyle(color: NoxTheme.muted, fontSize: 8, fontFamily: 'monospace')),
+      ]),
+    ]),
+  );
 
   Widget _quoteCard() {
     final q = _quotes[_quoteIdx];
@@ -339,19 +268,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icon(Icons.format_quote_rounded, color: NoxTheme.muted, size: 20),
           const SizedBox(height: 8),
           Text('"${q['text']!}"', style: const TextStyle(
-            color: Colors.white, fontSize: 13,
-            fontWeight: FontWeight.w600, height: 1.6,
+            color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600, height: 1.6,
           )),
           const SizedBox(height: 8),
           Text('— ${q['author']!}', style: TextStyle(
-            color: NoxTheme.accentDim, fontSize: 10,
-            fontFamily: 'monospace', letterSpacing: 1,
+            color: NoxTheme.accentDim, fontSize: 10, fontFamily: 'monospace', letterSpacing: 1,
           )),
           const SizedBox(height: 12),
           Row(children: List.generate(_quotes.length, (i) => AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: i == _quoteIdx ? 14 : 5,
-            height: 5,
+            width: i == _quoteIdx ? 14 : 5, height: 5,
             margin: const EdgeInsets.only(right: 4),
             decoration: BoxDecoration(
               color: i == _quoteIdx ? NoxTheme.accentDim : NoxTheme.muted,
