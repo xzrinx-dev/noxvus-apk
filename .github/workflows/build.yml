@@ -37,11 +37,11 @@ jobs:
             cp assets/images/icon.png noxvus_build/android/app/src/main/res/mipmap-$dir/ic_launcher.png
           done
 
-      - name: Fix NDK and Gradle
+      - name: Fix Gradle and NDK
         run: |
-          sed -i "s|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.9-all.zip|" noxvus_build/android/gradle/wrapper/gradle-wrapper.properties
+          # Pakai versi gradle yang udah ada di cache runner
+          sed -i "s|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-bin.zip|" noxvus_build/android/gradle/wrapper/gradle-wrapper.properties
           sed -i 's/id("org.jetbrains.kotlin.android") version "[^"]*"/id("org.jetbrains.kotlin.android") version "1.9.22"/' noxvus_build/android/settings.gradle.kts
-          # Fix NDK version
           sed -i '/^android {/a\    ndkVersion = "27.0.12077973"' noxvus_build/android/app/build.gradle.kts
 
       - name: Install dependencies
