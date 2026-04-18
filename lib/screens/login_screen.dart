@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme.dart';
@@ -175,10 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
           shape: BoxShape.circle,
           color: Colors.white.withOpacity(opacity),
         ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80) as dynamic,
-          child: const SizedBox.expand(),
-        ),
+        child: const SizedBox.expand(),
       ),
     );
   }
