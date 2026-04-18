@@ -16,6 +16,15 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  final List<_NavItem> _navItems = [
+    _NavItem(icon: Icons.speed_rounded, label: 'Dashboard', index: 0),
+    _NavItem(icon: Icons.build_rounded, label: 'Tools', index: 1),
+    _NavItem(icon: Icons.tv_rounded, label: 'Jadwal TV', index: 2, comingSoon: false),
+    _NavItem(icon: Icons.newspaper_rounded, label: 'Berita', index: 3, comingSoon: false),
+    _NavItem(icon: Icons.music_video_rounded, label: 'TikTok DL', index: 4, comingSoon: false),
+    _NavItem(icon: Icons.rocket_launch_rounded, label: 'Coming Soon', index: 5),
+  ];
+
   void _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('nx_name');
@@ -30,27 +39,8 @@ class _MainScreenState extends State<MainScreen> {
     switch (_currentIndex) {
       case 0: return DashboardScreen(name: widget.name);
       case 1: return const ToolsScreen();
-      default: return _buildComingSoon();
+      default: return _ComingSoonPlaceholder(index: _currentIndex);
     }
-  }
-
-  Widget _buildComingSoon() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.rocket_launch_rounded, color: NoxTheme.muted, size: 48),
-          const SizedBox(height: 16),
-          const Text('Coming Soon', style: TextStyle(
-            color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700,
-          )),
-          const SizedBox(height: 8),
-          Text('Fitur ini lagi dikembangkan', style: TextStyle(
-            color: NoxTheme.muted, fontSize: 13, fontFamily: 'monospace',
-          )),
-        ],
-      ),
-    );
   }
 
   @override
@@ -97,12 +87,8 @@ class _MainScreenState extends State<MainScreen> {
               RichText(
                 text: const TextSpan(
                   children: [
-                    TextSpan(text: 'NOX', style: TextStyle(
-                      color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800,
-                    )),
-                    TextSpan(text: 'VUS', style: TextStyle(
-                      color: NoxTheme.accentDim, fontSize: 18, fontWeight: FontWeight.w800,
-                    )),
+                    TextSpan(text: 'NOX', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                    TextSpan(text: 'VUS', style: TextStyle(color: NoxTheme.accentDim, fontSize: 18, fontWeight: FontWeight.w800)),
                   ],
                 ),
               ),
@@ -117,8 +103,10 @@ class _MainScreenState extends State<MainScreen> {
                 child: Text(
                   widget.name,
                   style: TextStyle(
-                    color: NoxTheme.text2, fontSize: 11,
-                    fontFamily: 'monospace', letterSpacing: 1,
+                    color: NoxTheme.text2,
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    letterSpacing: 1,
                   ),
                 ),
               ),
@@ -196,6 +184,39 @@ class _MainScreenState extends State<MainScreen> {
         Navigator.pop(context);
       },
       dense: true,
+    );
+  }
+}
+
+class _NavItem {
+  final IconData icon;
+  final String label;
+  final int index;
+  final bool comingSoon;
+  _NavItem({required this.icon, required this.label, required this.index, this.comingSoon = false});
+}
+
+class _ComingSoonPlaceholder extends StatelessWidget {
+  final int index;
+  const _ComingSoonPlaceholder({required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.rocket_launch_rounded, color: NoxTheme.muted, size: 48),
+          const SizedBox(height: 16),
+          Text('Coming Soon', style: TextStyle(
+            color: NoxTheme.text2, fontSize: 18, fontWeight: FontWeight.w700,
+          )),
+          const SizedBox(height: 8),
+          Text('Fitur ini lagi dikembangkan', style: TextStyle(
+            color: NoxTheme.muted, fontSize: 13, fontFamily: 'monospace',
+          )),
+        ],
+      ),
     );
   }
 }
