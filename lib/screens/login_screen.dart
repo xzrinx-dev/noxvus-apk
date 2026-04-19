@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../theme.dart';
 import 'main_screen.dart';
+
+const _bg = Color(0xFF0A0A0A);
+const _bg3 = Color(0xFF181818);
+const _card = Color(0xFF141414);
+const _border = Color(0x12FFFFFF);
+const _border2 = Color(0x1FFFFFFF);
+const _accentDim = Color(0xFF666666);
+const _muted = Color(0xFF3A3A3A);
+const _text2 = Color(0xFF888888);
+const _radius = 16.0;
+const _radiusSm = 10.0;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NoxTheme.bg,
+      backgroundColor: _bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -37,25 +47,27 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 RichText(text: const TextSpan(children: [
                   TextSpan(text: 'NOX', style: TextStyle(
-                    color: Colors.white, fontSize: 52, fontWeight: FontWeight.w800, letterSpacing: -1)),
+                    color: Colors.white, fontSize: 52,
+                    fontWeight: FontWeight.w800, letterSpacing: -1)),
                   TextSpan(text: 'VUS', style: TextStyle(
-                    color: NoxTheme.accentDim, fontSize: 52, fontWeight: FontWeight.w800, letterSpacing: -1)),
+                    color: _accentDim, fontSize: 52,
+                    fontWeight: FontWeight.w800, letterSpacing: -1)),
                 ])),
                 const SizedBox(height: 8),
-                Text('TOOLS PLATFORM', style: TextStyle(
-                  color: NoxTheme.text2, fontSize: 10, letterSpacing: 3, fontFamily: 'monospace')),
+                const Text('TOOLS PLATFORM', style: TextStyle(
+                  color: _text2, fontSize: 10, letterSpacing: 3)),
                 const SizedBox(height: 48),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
-                    color: NoxTheme.card,
-                    borderRadius: BorderRadius.circular(NoxTheme.radius),
-                    border: Border.all(color: NoxTheme.border2),
+                    color: _card,
+                    borderRadius: BorderRadius.circular(_radius),
+                    border: Border.all(color: _border2),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('NAMA LO', style: TextStyle(
-                      color: NoxTheme.text2, fontSize: 10, letterSpacing: 2, fontFamily: 'monospace')),
+                    const Text('NAMA LO', style: TextStyle(
+                      color: _text2, fontSize: 10, letterSpacing: 2)),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _ctrl,
@@ -64,21 +76,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: const TextStyle(color: Colors.white, fontSize: 16),
                       decoration: InputDecoration(
                         hintText: 'nama...',
-                        hintStyle: TextStyle(color: NoxTheme.muted),
+                        hintStyle: const TextStyle(color: _muted),
                         filled: true,
-                        fillColor: NoxTheme.bg3,
+                        fillColor: _bg3,
                         counterText: '',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(NoxTheme.radiusSm),
-                          borderSide: BorderSide(color: NoxTheme.border),
+                          borderRadius: BorderRadius.circular(_radiusSm),
+                          borderSide: const BorderSide(color: _border),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(NoxTheme.radiusSm),
-                          borderSide: BorderSide(color: NoxTheme.border),
+                          borderRadius: BorderRadius.circular(_radiusSm),
+                          borderSide: const BorderSide(color: _border),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(NoxTheme.radiusSm),
-                          borderSide: BorderSide(color: NoxTheme.border2),
+                          borderRadius: BorderRadius.circular(_radiusSm),
+                          borderSide: const BorderSide(color: _border2),
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
@@ -94,10 +106,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(NoxTheme.radiusSm)),
+                            borderRadius: BorderRadius.circular(_radiusSm)),
                           elevation: 0,
                         ),
-                        child: const Text('Masuk →', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                        child: const Text('Masuk →',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
                       ),
                     ),
                   ]),
