@@ -19,6 +19,7 @@ void main() async {
 class NoxvusApp extends StatelessWidget {
   final String? initialName;
   const NoxvusApp({super.key, this.initialName});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
