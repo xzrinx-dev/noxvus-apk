@@ -16,14 +16,9 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.9'
-
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
+          flutter-version: '3.19.6'
           channel: 'stable'
 
       - name: Create project and copy files
@@ -31,21 +26,14 @@ jobs:
           flutter create --org com.xzrinx noxvus_build
           cp -r lib/* noxvus_build/lib/
           cp pubspec.yaml noxvus_build/pubspec.yaml
-          mkdir -p noxvus_build/assets/audio
           mkdir -p noxvus_build/assets/images
-          cp assets/audio/* noxvus_build/assets/audio/
-          cp assets/images/* noxvus_build/assets/images/
+          cp assets/images/icon.png noxvus_build/assets/images/
 
       - name: Set custom app icon
         run: |
           for dir in hdpi mdpi xhdpi xxhdpi xxxhdpi; do
             cp assets/images/icon.png noxvus_build/android/app/src/main/res/mipmap-$dir/ic_launcher.png
           done
-
-      - name: Fix Kotlin and NDK
-        run: |
-          sed -i 's/id("org.jetbrains.kotlin.android") version "[^"]*"/id("org.jetbrains.kotlin.android") version "1.9.22"/' noxvus_build/android/settings.gradle.kts
-          sed -i '/^android {/a\    ndkVersion = "27.0.12077973"' noxvus_build/android/app/build.gradle.kts
 
       - name: Install dependencies
         run: cd noxvus_build && flutter pub get
